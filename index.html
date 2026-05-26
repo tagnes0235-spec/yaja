@@ -1002,10 +1002,6 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
           <div class="card">
             <div class="card-h">학생 추가</div>
             <div style="display: flex; flex-direction: column; gap: 12px;">
-              <div class="field">
-                <label>이름</label>
-                <input class="input" id="new-name" placeholder="예: 홍길동">
-              </div>
               <div class="row">
                 <div class="field">
                   <label>학년</label>
@@ -1021,46 +1017,45 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
                 </div>
               </div>
               <button class="btn btn-primary" onclick="addStudent()">+ 학생 등록</button>
+              <p class="muted" style="font-size:12px; margin:0;">개인정보 보호를 위해 이름 없이 학번으로만 관리해요.</p>
             </div>
           </div>
           <div class="card" style="margin-top: 16px;">
             <div class="card-h">일괄 추가</div>
-            <div class="card-sub">한 줄에 한 명씩. 형식: <span class="mono faint">이름,반,번호</span> 또는 <span class="mono faint">이름,학년,반,번호</span></div>
-            <textarea class="input" id="bulk-input" rows="6" placeholder="홍길동,3,7,15&#10;김철수,3,7,16&#10;..." style="font-family: 'JetBrains Mono', monospace; resize: vertical;"></textarea>
+            <div class="card-sub">한 줄에 한 명씩. 형식: <span class="mono faint">반,번호</span> 또는 <span class="mono faint">학년,반,번호</span></div>
+            <textarea class="input" id="bulk-input" rows="6" placeholder="3,7,15&#10;3,7,16&#10;..." style="font-family: 'JetBrains Mono', monospace; resize: vertical;"></textarea>
             <button class="btn btn-primary btn-block" style="margin-top: 10px;" onclick="bulkAddStudents()">일괄 추가</button>
           </div>
           <div class="card" style="margin-top: 16px;">
             <div class="card-h">엑셀/CSV로 명단 올리기</div>
-            <div class="card-sub">이름·학번·요일별 신청을 한 파일로 한 번에 등록해요. 양식을 받아 채운 뒤 올리면 됩니다.</div>
+            <div class="card-sub">학번·요일별 신청을 한 파일로 한 번에 등록해요. 양식을 받아 채운 뒤 올리면 됩니다.</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
               <button class="btn btn-block" onclick="downloadTemplate()">⬇ 빈 양식 받기 (.xlsx)</button>
               <label class="btn btn-primary btn-block" style="cursor:pointer;">
                 📤 엑셀/CSV 파일 올리기
                 <input type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleRosterFile(event)">
               </label>
-              <p class="muted" style="font-size:12px; margin:4px 0 0;">요일 칸: <span class="mono">12</span>=종일, <span class="mono">1</span>=1교시, <span class="mono">2</span>=2교시, 빈칸=신청 안 함</p>
+              <p class="muted" style="font-size:12px; margin:4px 0 0;">요일 칸: <span class="mono">O</span> 또는 <span class="mono">1</span>=신청, 빈칸=신청 안 함</p>
             </div>
           </div>
           <div class="card" style="margin-top: 16px;">
             <div class="card-h">신청 일괄 설정</div>
             <div class="card-sub">파일 없이 전체를 한 패턴으로 맞출 때만 쓰세요.</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-block" onclick="applyScheduleToAll('weekday-all')">전체 → 평일 종일(1·2교시)</button>
-              <button class="btn btn-block" onclick="applyScheduleToAll('weekday-1')">전체 → 평일 1교시만</button>
+              <button class="btn btn-block" onclick="applyScheduleToAll('weekday')">전체 → 평일 야자 신청</button>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-h">
             <span>등록된 학생 <span class="faint mono" id="s-count-inline" style="font-weight: 400;">0</span></span>
-            <input class="input" id="student-search" placeholder="이름·학번 검색…" style="max-width: 220px;">
+            <input class="input" id="student-search" placeholder="학번 검색… (예: 7-15)" style="max-width: 220px;">
           </div>
           <div class="table-wrap">
             <table class="tbl">
               <thead>
                 <tr>
                   <th style="width: 50px;">#</th>
-                  <th>이름</th>
                   <th>학번</th>
                   <th>신청 요일</th>
                   <th>QR 코드</th>
@@ -1105,8 +1100,25 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
           <button class="btn btn-sm btn-primary stat-ctl" style="flex:0 0 auto; margin-left:auto; white-space:nowrap;" onclick="exportStats()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>엑셀 통계</button>
         </div>
         <p class="muted" style="font-size:12px; margin:12px 0 0; line-height:1.6;">
-          출석 기준: 입실·퇴실 모두 기록 = <strong style="color:var(--success)">정상 출석(○)</strong> · 입실만 = <strong style="color:var(--accent)">입실만(△)</strong> · 입실 없음 = <strong style="color:var(--danger)">결석(✗)</strong>. 1·2교시는 따로 집계하며, 신청한 교시만 분모에 포함돼요.
+          출석 기준: 입실·퇴실 모두 기록 = <strong style="color:var(--success)">정상 출석(○)</strong> · 입실만 = <strong style="color:var(--accent)">입실만(△)</strong> · 입실 없음 = <strong style="color:var(--danger)">결석(✗)</strong>. 신청한 날만 집계에 포함돼요.
         </p>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-h">
+          <span>출결 확인 (입·퇴실 시각)</span>
+          <div class="row" style="gap:8px; flex-wrap:wrap; align-items:center;">
+            <input class="input" id="io-date" type="date" style="max-width:160px;">
+            <select class="select" id="io-class" style="max-width:130px;"><option value="">전체 반</option></select>
+            <button class="btn" onclick="renderIoTable()">조회</button>
+          </div>
+        </div>
+        <div class="card-sub">학생별 첫 입실·마지막 퇴실 시각 · 신청한 날만 표시됩니다.</div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>학번</th><th>입실</th><th>퇴실</th><th>상태</th></tr></thead>
+            <tbody id="io-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div class="card">
         <div class="card-h">
@@ -1118,7 +1130,7 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
               <option value="in">입실만</option>
               <option value="out">퇴실만</option>
             </select>
-            <input class="input" id="log-search" placeholder="이름 검색…" style="max-width: 180px;">
+            <input class="input" id="log-search" placeholder="학번 검색…" style="max-width: 180px;">
             <button class="btn" onclick="renderLog()">조회</button>
             <button class="btn btn-primary" onclick="exportCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>원본 CSV</button>
           </div>
@@ -1129,10 +1141,8 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
             <thead>
               <tr>
                 <th>시각</th>
-                <th>이름</th>
                 <th>학번</th>
                 <th>구분</th>
-                <th>교시</th>
                 <th></th>
               </tr>
             </thead>
@@ -1146,27 +1156,17 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
     <div id="panel-settings" class="tab-panel hidden">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div class="card">
-          <div class="card-h">교시 시간 설정</div>
-          <div class="card-sub">키오스크 상단에 현재 교시를 자동으로 표시합니다.</div>
+          <div class="card-h">야자 시간 설정</div>
+          <div class="card-sub">단말 상단에 야자 진행 상태를 표시하는 데 쓰여요.</div>
           <div style="display: flex; flex-direction: column; gap: 12px;">
             <div class="row">
               <div class="field">
-                <label>1교시 시작</label>
-                <input class="input" id="p1-start" type="time">
+                <label>야자 시작</label>
+                <input class="input" id="yaja-start" type="time">
               </div>
               <div class="field">
-                <label>1교시 종료</label>
-                <input class="input" id="p1-end" type="time">
-              </div>
-            </div>
-            <div class="row">
-              <div class="field">
-                <label>2교시 시작</label>
-                <input class="input" id="p2-start" type="time">
-              </div>
-              <div class="field">
-                <label>2교시 종료</label>
-                <input class="input" id="p2-end" type="time">
+                <label>야자 종료</label>
+                <input class="input" id="yaja-end" type="time">
               </div>
             </div>
             <div class="field">
@@ -1275,11 +1275,11 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
         </div>
       </div>
       <div class="card" style="margin-top:24px;">
-        <div class="card-h">우리 반 오늘 출결 타임라인</div>
-        <div class="card-sub">학번 기준 · 실시간으로 갱신됩니다</div>
+        <div class="card-h">우리 반 오늘 출결 (입·퇴실 시각)</div>
+        <div class="card-sub">학번 기준 · 첫 입실과 마지막 퇴실 시각 · 실시간 갱신</div>
         <div class="table-wrap">
           <table class="tbl">
-            <thead><tr><th>시각</th><th>학번</th><th>구분</th><th>교시</th><th>교실</th></tr></thead>
+            <thead><tr><th>학번</th><th>입실</th><th>퇴실</th><th>상태</th></tr></thead>
             <tbody id="t-timeline"></tbody>
           </table>
         </div>
@@ -1432,8 +1432,7 @@ const STATE = {
   students: [],   // {id, code, name, grade, class, num, schedule}
   log: [],        // {id, studentId, ts, type, period, room, unplanned}
   settings: {
-    p1: { start: '19:00', end: '20:30' },
-    p2: { start: '20:40', end: '22:00' },
+    yaja: { start: '19:00', end: '22:00' },
     schoolName: '',
     secret: '',          // 이 시스템의 서명 비밀키 (자동 생성)
     rotateSec: 12,       // 도전 QR 회전 주기(초)
@@ -1512,73 +1511,65 @@ function toast(msg, type='') {
 }
 
 function studentLabel(s) {
+  if (!s) return '';
   const cls = (s.grade && s.class && s.num)
     ? `${s.grade}-${s.class} ${pad(s.num)}`
     : (s.class && s.num) ? `${s.class}-${pad(s.num)}` : '';
   return cls;
 }
+// 표시용 이름 = 학번 (이름은 더 이상 저장하지 않음)
+function studentName(s) {
+  return studentLabel(s) || '학번미상';
+}
 
 // ===== 신청표(schedule) 유틸 =====
-// schedule 형태: { mon:[1,2], tue:[1], wed:[], ... }  값은 신청한 교시 배열
+// schedule 형태: { mon:true, tue:true, wed:false, ... }  요일별 야자 신청 여부
 const DAY_KEYS  = ['sun','mon','tue','wed','thu','fri','sat'];
 const DAY_LABEL = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
 
 function emptySchedule() {
-  return { sun:[], mon:[], tue:[], wed:[], thu:[], fri:[], sat:[] };
+  return { sun:false, mon:false, tue:false, wed:false, thu:false, fri:false, sat:false };
 }
-// 저장된 학생에 schedule 없으면 기본값(평일 1·2교시 전부 신청)으로 채워 하위호환
+// 신청 정보 정규화 — 구버전(교시 배열)도 boolean으로 변환해 하위호환
 function ensureSchedule(s) {
   if (!s.schedule) {
-    s.schedule = { sun:[], mon:[1,2], tue:[1,2], wed:[1,2], thu:[1,2], fri:[1,2], sat:[] };
+    s.schedule = { sun:false, mon:true, tue:true, wed:true, thu:true, fri:true, sat:false };
+    return s.schedule;
+  }
+  // 구버전 배열 형태면 변환 (배열 비어있지 않으면 신청)
+  const sch = s.schedule;
+  let needsConvert = false;
+  DAY_KEYS.forEach(k => { if (Array.isArray(sch[k])) needsConvert = true; });
+  if (needsConvert) {
+    const conv = {};
+    DAY_KEYS.forEach(k => { conv[k] = Array.isArray(sch[k]) ? sch[k].length > 0 : !!sch[k]; });
+    s.schedule = conv;
   }
   return s.schedule;
 }
 function dayKeyOf(d=new Date()) { return DAY_KEYS[d.getDay()]; }
 
-// 오늘 해당 학생이 신청한 교시 배열
-function todayApplied(s, d=new Date()) {
+// 오늘 야자를 신청했는지
+function isApplied(s, d=new Date()) {
   const sch = ensureSchedule(s);
-  return (sch[dayKeyOf(d)] || []).slice();
+  return !!sch[dayKeyOf(d)];
 }
-// 오늘 특정 교시를 신청했는지
-function isApplied(s, period, d=new Date()) {
-  if (!period) return false;
-  return todayApplied(s, d).includes(period);
-}
-// 신청표를 짧은 텍스트로: "월·수 1교시 / 화·목 종일" 같은 식은 복잡하니 요일별 표기
+// 신청표 요약: "월·화·목·금" 형태로
 function scheduleSummary(s) {
   const sch = ensureSchedule(s);
-  const parts = [];
-  ['mon','tue','wed','thu','fri','sat','sun'].forEach(k => {
-    const ps = sch[k] || [];
-    if (!ps.length) return;
-    const tag = ps.length === 2 ? '종일' : (ps[0] === 1 ? '1교시' : '2교시');
-    parts.push(`${DAY_LABEL[k]} ${tag}`);
-  });
-  return parts.length ? parts.join(' · ') : '신청 없음';
+  const days = ['mon','tue','wed','thu','fri','sat','sun'].filter(k => sch[k]).map(k => DAY_LABEL[k]);
+  return days.length ? days.join('·') : '신청 없음';
 }
 
-function getPeriod(d=new Date()) {
-  const cur = d.getHours() * 60 + d.getMinutes();
-  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
-  const p1s = toMin(STATE.settings.p1.start), p1e = toMin(STATE.settings.p1.end);
-  const p2s = toMin(STATE.settings.p2.start), p2e = toMin(STATE.settings.p2.end);
-  if (cur >= p1s && cur <= p1e) return 1;
-  if (cur >= p2s && cur <= p2e) return 2;
-  return null;
-}
-
+// 야자 진행 시간 텍스트 (단일 시간대)
 function getPeriodText() {
   const dayLbl = DAY_LABEL[dayKeyOf()];
-  const p = getPeriod();
-  if (p === 1) return `${dayLbl}요일 · 1교시 진행 중 (~ ${STATE.settings.p1.end})`;
-  if (p === 2) return `${dayLbl}요일 · 2교시 진행 중 (~ ${STATE.settings.p2.end})`;
   const now = new Date(); const cur = now.getHours()*60 + now.getMinutes();
   const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
-  if (cur < toMin(STATE.settings.p1.start)) return `${dayLbl}요일 · 1교시 대기 (${STATE.settings.p1.start} 시작)`;
-  if (cur > toMin(STATE.settings.p1.end) && cur < toMin(STATE.settings.p2.start)) return `${dayLbl}요일 · 쉬는시간 (~ ${STATE.settings.p2.start})`;
-  if (cur > toMin(STATE.settings.p2.end)) return `${dayLbl}요일 · 야자 종료`;
-  return `${dayLbl}요일 · 시간 외`;
+  const s = toMin(STATE.settings.yaja.start), e = toMin(STATE.settings.yaja.end);
+  if (cur >= s && cur <= e) return `${dayLbl}요일 · 야자 진행 중 (~ ${STATE.settings.yaja.end})`;
+  if (cur < s) return `${dayLbl}요일 · 야자 대기 (${STATE.settings.yaja.start} 시작)`;
+  return `${dayLbl}요일 · 야자 종료`;
 }
 
 // ============================================================
@@ -1844,7 +1835,7 @@ function renderTeacher() {
   const lastByStudent = {};
   todayLog.slice().sort((a,b)=>a.ts-b.ts).forEach(r => { lastByStudent[r.studentId] = r; });
 
-  const appliedToday = roster.filter(s => todayApplied(s, now).length > 0);
+  const appliedToday = roster.filter(s => isApplied(s, now));
   const presentIds = Object.keys(lastByStudent).filter(id => lastByStudent[id].type === 'in');
   const noShowIds = appliedToday.map(s => s.id).filter(id => !lastByStudent[id]);
 
@@ -1882,35 +1873,46 @@ function renderTeacher() {
     absentEl.innerHTML = '';
     noShowIds.map(id => STATE.students.find(s=>s.id===id)).filter(Boolean)
       .sort((a,b)=>(a.num||0)-(b.num||0)).forEach(s => {
-        const ps = todayApplied(s, now);
-        const tag = ps.length===2 ? '종일' : (ps[0]===1?'1교시':'2교시');
         const div = document.createElement('div');
         div.className = 'recent-item';
-        div.innerHTML = `<div><div class="name">${escapeHTML(studentLabel(s)||'학번미상')}</div><div class="meta">${tag} 신청</div></div><div class="time">미입실</div>`;
+        div.innerHTML = `<div><div class="name">${escapeHTML(studentLabel(s)||'학번미상')}</div></div><div class="time">미입실</div>`;
         absentEl.appendChild(div);
       });
   }
 
-  // 타임라인
+  // 오늘 출결 (입·퇴실 시각, 학생별 한 줄)
   const tl = $('#t-timeline');
-  const events = todayLog.slice().sort((a,b)=>b.ts-a.ts);
-  if (!events.length) {
-    tl.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="icon">○</div>오늘 출결 기록이 없습니다.</div></td></tr>`;
-  } else {
-    tl.innerHTML = '';
-    events.forEach(r => {
-      const s = STATE.students.find(x=>x.id===r.studentId);
-      const d = new Date(r.ts);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="mono faint">${fmtTimeS(d)}</td>
-        <td><strong>${escapeHTML(s?studentLabel(s):'?')||'학번미상'}</strong></td>
-        <td>${r.type==='in'?'<span class="pill pill-success">입실</span>':'<span class="pill pill-danger">퇴실</span>'}${r.unplanned?' <span class="pill pill-warn" style="font-size:9px;padding:1px 6px;">신청 외</span>':''}</td>
-        <td class="muted">${r.period?r.period+'교시':'—'}</td>
-        <td class="muted">${r.room?escapeHTML(r.room):'—'}</td>`;
-      tl.appendChild(tr);
-    });
+  tl.innerHTML = inOutRows(roster, today);
+}
+
+// 학생 목록 × 날짜 → 입·퇴실 시각 표 행 HTML (담임·관리자 공용)
+function inOutRows(students, dateStr) {
+  // 신청자 또는 출결 기록이 있는 학생만 표시
+  const dObj = new Date(dateStr + 'T00:00:00');
+  const rowsData = students.map(s => ({ s, io: dayInOut(s.id, dateStr), applied: isApplied(s, dObj) }))
+    .filter(x => x.applied || x.io.inTs || x.io.outTs);
+  if (!rowsData.length) {
+    return `<tr><td colspan="4"><div class="empty"><div class="icon">○</div>표시할 출결이 없습니다.</div></td></tr>`;
   }
+  // 입실 시각 빠른 순, 미입실은 아래로
+  rowsData.sort((a,b) => {
+    if (a.io.inTs && b.io.inTs) return a.io.inTs - b.io.inTs;
+    if (a.io.inTs) return -1;
+    if (b.io.inTs) return 1;
+    return ((a.s.class||0)*1000+(a.s.num||0)) - ((b.s.class||0)*1000+(b.s.num||0));
+  });
+  const statusPill = io => {
+    if (io.status === 'ok') return '<span class="pill pill-success">정상</span>';
+    if (io.status === 'in') return '<span class="pill pill-warn">재실 중</span>';
+    return '<span class="pill pill-muted">미입실</span>';
+  };
+  return rowsData.map(({s, io}) => `
+    <tr>
+      <td><strong>${escapeHTML(studentLabel(s)||'학번미상')}</strong>${io.unplanned?' <span class="pill pill-warn" style="font-size:9px;padding:1px 6px;">신청 외</span>':''}</td>
+      <td class="mono">${io.inTs ? fmtTime(new Date(io.inTs)) : '<span class="faint">—</span>'}</td>
+      <td class="mono">${io.outTs ? fmtTime(new Date(io.outTs)) : '<span class="faint">—</span>'}</td>
+      <td>${statusPill(io)}</td>
+    </tr>`).join('');
 }
 
 // ============================================================
@@ -1925,7 +1927,13 @@ function switchTab(panel) {
   if (panel === 'dashboard') renderDashboard();
   if (panel === 'students') renderStudents();
   if (panel === 'qrcards') renderQrSheet();
-  if (panel === 'log') { renderLog(); if (!$('#stat-from').value) setStatRange('thisMonth'); }
+  if (panel === 'log') {
+    renderLog();
+    if (!$('#stat-from').value) setStatRange('thisMonth');
+    if (!$('#io-date').value) $('#io-date').value = todayStr();
+    populateIoClasses();
+    renderIoTable();
+  }
   if (panel === 'settings') renderSettingsForm();
 }
 
@@ -1933,18 +1941,16 @@ function switchTab(panel) {
 // STUDENTS
 // ============================================================
 async function addStudent() {
-  const name = $('#new-name').value.trim();
   const grade = parseInt($('#new-grade').value) || null;
   const klass = parseInt($('#new-class').value) || null;
   const num = parseInt($('#new-num').value) || null;
-  if (!name) { toast('이름을 입력하세요', 'danger'); return; }
-  if (STATE.students.some(s => s.name === name && s.class === klass && s.num === num)) {
-    toast('이미 등록된 학생입니다', 'danger'); return;
+  if (!klass || !num) { toast('반과 번호를 입력하세요', 'danger'); return; }
+  if (STATE.students.some(s => s.class === klass && s.num === num)) {
+    toast('이미 등록된 학번입니다', 'danger'); return;
   }
-  STATE.students.push({ id: uid(), code: genCode(), name, grade, class: klass, num,
+  STATE.students.push({ id: uid(), code: genCode(), grade, class: klass, num,
     schedule: { sun:[], mon:[1,2], tue:[1,2], wed:[1,2], thu:[1,2], fri:[1,2], sat:[] } });
   await saveStudents();
-  $('#new-name').value = '';
   $('#new-num').value = '';
   toast('학생을 등록했어요', 'success');
   renderStudents();
@@ -1958,16 +1964,16 @@ async function bulkAddStudents() {
   let added = 0;
   for (const line of lines) {
     const parts = line.split(/[,\t]/).map(p => p.trim());
-    let name, grade, klass, num;
-    if (parts.length === 3) { [name, klass, num] = parts; }
-    else if (parts.length === 4) { [name, grade, klass, num] = parts; }
+    let grade = null, klass, num;
+    if (parts.length === 2) { [klass, num] = parts; }
+    else if (parts.length === 3) { [grade, klass, num] = parts; }
     else continue;
     grade = parseInt(grade) || null;
     klass = parseInt(klass) || null;
     num = parseInt(num) || null;
-    if (!name) continue;
-    if (STATE.students.some(s => s.name === name && s.class === klass && s.num === num)) continue;
-    STATE.students.push({ id: uid(), code: genCode(), name, grade, class: klass, num,
+    if (!klass || !num) continue;
+    if (STATE.students.some(s => s.class === klass && s.num === num)) continue;
+    STATE.students.push({ id: uid(), code: genCode(), grade, class: klass, num,
       schedule: { sun:[], mon:[1,2], tue:[1,2], wed:[1,2], thu:[1,2], fri:[1,2], sat:[] } });
     added++;
   }
@@ -1996,29 +2002,24 @@ function openSchedule(id) {
   _schedEditId = id;
   const sch = ensureSchedule(s);
   const days = [['mon','월'],['tue','화'],['wed','수'],['thu','목'],['fri','금'],['sat','토'],['sun','일']];
-  const rows = days.map(([k, lbl]) => {
-    const ps = sch[k] || [];
-    return `
+  const rows = days.map(([k, lbl]) => `
       <tr>
         <td style="font-weight:600; color:var(--text);">${lbl}</td>
-        <td style="text-align:center;"><input type="checkbox" class="sched-cb" data-day="${k}" data-p="1" ${ps.includes(1)?'checked':''} style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;"></td>
-        <td style="text-align:center;"><input type="checkbox" class="sched-cb" data-day="${k}" data-p="2" ${ps.includes(2)?'checked':''} style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;"></td>
-      </tr>`;
-  }).join('');
+        <td style="text-align:center;"><input type="checkbox" class="sched-cb" data-day="${k}" ${sch[k]?'checked':''} style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;"></td>
+      </tr>`).join('');
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   backdrop.id = 'sched-modal';
   backdrop.innerHTML = `
-    <div class="modal" style="max-width: 360px;">
-      <h3>${escapeHTML(s.name)} 신청 요일</h3>
-      <p class="muted" style="font-size:13px; margin:-8px 0 16px;">야자를 신청한 요일·교시에 체크하세요.</p>
+    <div class="modal" style="max-width: 320px;">
+      <h3>${escapeHTML(studentName(s))} 신청 요일</h3>
+      <p class="muted" style="font-size:13px; margin:-8px 0 16px;">야자를 신청한 요일에 체크하세요.</p>
       <div style="display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;">
-        <button class="btn btn-sm" onclick="schedPreset('weekday-all')">평일 종일</button>
-        <button class="btn btn-sm" onclick="schedPreset('weekday-1')">평일 1교시</button>
+        <button class="btn btn-sm" onclick="schedPreset('weekday')">평일 전체</button>
         <button class="btn btn-sm" onclick="schedPreset('clear')">전체 해제</button>
       </div>
       <table class="tbl" style="border:1px solid var(--border-soft); border-radius:var(--r);">
-        <thead><tr><th>요일</th><th style="text-align:center;">1교시</th><th style="text-align:center;">2교시</th></tr></thead>
+        <thead><tr><th>요일</th><th style="text-align:center;">야자 신청</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="modal-actions">
@@ -2030,13 +2031,10 @@ function openSchedule(id) {
   backdrop.addEventListener('click', e => { if (e.target === backdrop) closeSchedule(); });
 }
 function schedPreset(kind) {
-  const cbs = $$('#sched-modal .sched-cb');
-  cbs.forEach(cb => {
-    const day = cb.dataset.day, p = cb.dataset.p;
-    const weekday = ['mon','tue','wed','thu','fri'].includes(day);
+  $$('#sched-modal .sched-cb').forEach(cb => {
+    const weekday = ['mon','tue','wed','thu','fri'].includes(cb.dataset.day);
     if (kind === 'clear') cb.checked = false;
-    else if (kind === 'weekday-all') cb.checked = weekday;
-    else if (kind === 'weekday-1') cb.checked = weekday && p === '1';
+    else if (kind === 'weekday') cb.checked = weekday;
   });
 }
 function closeSchedule() {
@@ -2048,10 +2046,7 @@ async function saveSchedule() {
   const s = STATE.students.find(x => x.id === _schedEditId);
   if (!s) { closeSchedule(); return; }
   const sch = emptySchedule();
-  $$('#sched-modal .sched-cb').forEach(cb => {
-    if (cb.checked) sch[cb.dataset.day].push(parseInt(cb.dataset.p));
-  });
-  Object.keys(sch).forEach(k => sch[k].sort());
+  $$('#sched-modal .sched-cb').forEach(cb => { sch[cb.dataset.day] = cb.checked; });
   s.schedule = sch;
   await saveStudents();
   closeSchedule();
@@ -2062,13 +2057,11 @@ async function saveSchedule() {
 // ===== 전체 일괄 신청 설정 =====
 async function applyScheduleToAll(kind) {
   const presets = {
-    'weekday-all': { sun:[], mon:[1,2], tue:[1,2], wed:[1,2], thu:[1,2], fri:[1,2], sat:[] },
-    'weekday-1':   { sun:[], mon:[1],   tue:[1],   wed:[1],   thu:[1],   fri:[1],   sat:[] },
+    'weekday': { sun:false, mon:true, tue:true, wed:true, thu:true, fri:true, sat:false },
   };
   const p = presets[kind];
   if (!p) return;
-  const label = kind === 'weekday-all' ? '평일 종일(1·2교시)' : '평일 1교시만';
-  if (!confirm(`전체 ${STATE.students.length}명의 신청을 "${label}"로 일괄 설정합니다.\n기존 개별 신청 정보는 덮어씌워집니다. 계속할까요?`)) return;
+  if (!confirm(`전체 ${STATE.students.length}명의 신청을 "평일 전체"로 일괄 설정합니다.\n기존 개별 신청 정보는 덮어씌워집니다. 계속할까요?`)) return;
   STATE.students.forEach(s => { s.schedule = JSON.parse(JSON.stringify(p)); });
   await saveStudents();
   toast('전체 신청을 설정했어요', 'success');
@@ -2080,32 +2073,27 @@ const ROSTER_DAYS = [['월','mon'],['화','tue'],['수','wed'],['목','thu'],['�
 
 function downloadTemplate() {
   if (!window.XLSX) { toast('엑셀 라이브러리 로딩 중 — 잠시 후 다시', 'danger'); return; }
-  const head = ['이름','학년','반','번호','월','화','수','목','금','토','일'];
+  const head = ['학년','반','번호','월','화','수','목','금','토','일'];
   const rows = [
     head,
-    ['홍길동', 3, 7, 1, 12, 1, 12, 1, '', '', ''],
-    ['김철수', 3, 7, 2, 1, 1, 1, 1, 1, '', ''],
-    ['이영희', 3, 7, 3, 12, 12, 12, 12, 12, '', ''],
+    [3, 7, 1, 'O', 'O', '', 'O', 'O', '', ''],
+    [3, 7, 2, 'O', 'O', 'O', 'O', 'O', '', ''],
+    [3, 7, 3, 'O', '', 'O', '', 'O', '', ''],
   ];
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:10},{wch:6},{wch:6},{wch:6},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
+  ws['!cols'] = [{wch:6},{wch:6},{wch:6},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '명단');
   XLSX.writeFile(wb, '야자명단_양식.xlsx');
   toast('양식을 받았어요. 채운 뒤 올려주세요', 'success');
 }
 
-// 요일 칸 값 → 교시 배열
+// 요일 칸 값 → 신청 여부(boolean)
 function parseDayCell(v) {
-  if (v === null || v === undefined) return [];
+  if (v === null || v === undefined) return false;
   const s = String(v).trim().toLowerCase();
-  if (!s || s === '0' || s === 'x' || s === '-' || s === 'n') return [];
-  if (s.includes('종일') || s === '12' || s === '21' || s === 'o' || s === 'all') return [1,2];
-  const has1 = /1/.test(s), has2 = /2/.test(s);
-  const out = [];
-  if (has1) out.push(1);
-  if (has2) out.push(2);
-  return out.length ? out : [];
+  if (!s || s === '0' || s === 'x' || s === '-' || s === 'n' || s === 'false') return false;
+  return true; // O, 1, 2, 12, 종일, 신청 등 비어있지 않으면 신청
 }
 
 function normHeader(h) { return String(h ?? '').replace(/\s|교시|요일/g, '').trim(); }
@@ -2131,50 +2119,43 @@ function handleRosterFile(ev) {
 }
 
 function parseRoster(rows) {
-  // 헤더 행 찾기 (이름 컬럼이 있는 첫 행)
+  // 헤더 행 찾기 ('반' 컬럼이 있는 첫 행)
   let headerIdx = -1, header = null;
   for (let i = 0; i < Math.min(rows.length, 5); i++) {
     const hs = rows[i].map(normHeader);
-    if (hs.includes('이름') || hs.includes('성명')) { headerIdx = i; header = hs; break; }
+    if (hs.includes('반') && hs.includes('번호')) { headerIdx = i; header = hs; break; }
   }
-  if (headerIdx < 0) { toast('헤더(이름 칸)를 찾을 수 없어요. 양식을 확인해주세요', 'danger'); return; }
+  if (headerIdx < 0) { toast('헤더(반·번호 칸)를 찾을 수 없어요. 양식을 확인해주세요', 'danger'); return; }
 
-  const col = name => {
-    const idx = header.indexOf(name);
-    return idx;
-  };
-  const ci = {
-    name: col('이름') >= 0 ? col('이름') : col('성명'),
-    grade: col('학년'), class: col('반'), num: col('번호'),
-  };
+  const col = name => header.indexOf(name);
+  const ci = { grade: col('학년'), class: col('반'), num: col('번호') };
   const dayCols = {};
   ROSTER_DAYS.forEach(([kr, key]) => { dayCols[key] = col(kr); });
 
-  const parsed = [], errors = [];
+  const parsed = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r || r.every(c => String(c).trim() === '')) continue;
-    const name = String(r[ci.name] ?? '').trim();
-    if (!name) { continue; }
     const grade = ci.grade >= 0 ? (parseInt(r[ci.grade]) || null) : null;
     const klass = ci.class >= 0 ? (parseInt(r[ci.class]) || null) : null;
     const num = ci.num >= 0 ? (parseInt(r[ci.num]) || null) : null;
+    if (!klass || !num) continue;   // 반·번호 없으면 건너뜀
     const sch = emptySchedule();
     let anyDay = false;
     ROSTER_DAYS.forEach(([kr, key]) => {
       if (dayCols[key] >= 0) {
-        const ps = parseDayCell(r[dayCols[key]]);
-        sch[key] = ps;
-        if (ps.length) anyDay = true;
+        const applied = parseDayCell(r[dayCols[key]]);
+        sch[key] = applied;
+        if (applied) anyDay = true;
       }
     });
-    parsed.push({ name, grade, class: klass, num, schedule: sch, anyDay });
+    parsed.push({ grade, class: klass, num, schedule: sch, anyDay });
   }
   if (!parsed.length) { toast('읽을 수 있는 학생이 없어요', 'danger'); return; }
 
-  // 신규 / 업데이트 구분 (이름+반+번호 매칭)
+  // 신규 / 업데이트 구분 (반+번호 매칭)
   parsed.forEach(p => {
-    const match = STATE.students.find(s => s.name === p.name && s.class === p.class && s.num === p.num);
+    const match = STATE.students.find(s => s.class === p.class && s.num === p.num);
     p._existing = match || null;
     p._status = match ? '업데이트' : '신규';
   });
@@ -2188,7 +2169,7 @@ function showRosterPreview(parsed) {
   const nNoDay = parsed.filter(p => !p.anyDay).length;
   const rowsHtml = parsed.slice(0, 200).map(p => `
     <tr>
-      <td><strong>${escapeHTML(p.name)}</strong></td>
+      <td><strong>${escapeHTML(studentLabel(p)||"학번미상")}</strong></td>
       <td class="muted">${[p.grade,p.class,p.num].filter(Boolean).join('-') || '—'}</td>
       <td style="font-size:12px; color:var(--text-dim);">${escapeHTML(scheduleSummary({schedule:p.schedule}))}</td>
       <td>${p._status === '신규'
@@ -2208,7 +2189,7 @@ function showRosterPreview(parsed) {
       </p>
       <div class="table-wrap" style="max-height: 340px; overflow-y:auto;">
         <table class="tbl">
-          <thead><tr><th>이름</th><th>학번</th><th>신청 요일</th><th>처리</th></tr></thead>
+          <thead><tr><th>학번</th><th>신청 요일</th><th>처리</th></tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       </div>
@@ -2235,7 +2216,7 @@ async function commitRoster() {
       if (p.grade) p._existing.grade = p.grade;
       updated++;
     } else {
-      STATE.students.push({ id: uid(), code: genCode(), name: p.name,
+      STATE.students.push({ id: uid(), code: genCode(),
         grade: p.grade, class: p.class, num: p.num, schedule: p.schedule });
       added++;
     }
@@ -2250,7 +2231,7 @@ async function commitRoster() {
 async function regenCode(id) {
   const s = STATE.students.find(x => x.id === id);
   if (!s) return;
-  if (!confirm(`${s.name} 학생의 QR 코드를 새로 발급할까요?\n이전 QR 카드는 더 이상 사용할 수 없게 됩니다.`)) return;
+  if (!confirm(`${studentName(s)} 학생의 QR 코드를 새로 발급할까요?\n이전 QR 카드는 더 이상 사용할 수 없게 됩니다.`)) return;
   s.code = genCode();
   await saveStudents();
   toast('새 코드를 발급했어요', 'success');
@@ -2262,27 +2243,25 @@ function renderStudents() {
   let list = STATE.students.slice();
   if (search) {
     list = list.filter(s =>
-      s.name.toLowerCase().includes(search) ||
       String(s.num || '').includes(search) ||
       studentLabel(s).toLowerCase().includes(search));
   }
   list.sort((a, b) => {
     if ((a.class||0) !== (b.class||0)) return (a.class||0) - (b.class||0);
     if ((a.num||0) !== (b.num||0)) return (a.num||0) - (b.num||0);
-    return a.name.localeCompare(b.name);
+    return 0;
   });
 
   const tbody = $('#students-tbody');
   tbody.innerHTML = '';
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="icon">○</div>등록된 학생이 없습니다. 왼쪽에서 추가하세요.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="icon">○</div>등록된 학생이 없습니다. 왼쪽에서 추가하세요.</div></td></tr>`;
   } else {
     list.forEach((s, i) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="faint">${i+1}</td>
-        <td><strong>${escapeHTML(s.name)}</strong></td>
-        <td class="muted">${escapeHTML(studentLabel(s)) || '—'}</td>
+        <td><strong>${escapeHTML(studentName(s))}</strong></td>
         <td><span class="sched-summary" style="font-size: 12px; color: var(--text-dim);">${escapeHTML(scheduleSummary(s))}</span></td>
         <td><span class="mono" style="color: var(--accent);">${s.code}</span></td>
         <td style="text-align: right; white-space: nowrap;">
@@ -2324,8 +2303,8 @@ function renderQrSheet() {
     card.className = 'qr-card';
     card.innerHTML = `
       <div class="school">${escapeHTML(STATE.settings.schoolName || '야간자율학습')}</div>
-      <div class="name">${escapeHTML(s.name)}</div>
-      <div class="meta">${escapeHTML(studentLabel(s)) || '학생'}</div>
+      <div class="name">${escapeHTML(studentName(s))}</div>
+      <div class="meta">출결 카드</div>
       <div class="qrwrap"><div class="qrcode"></div></div>
       <div class="code">${s.code}</div>
     `;
@@ -2350,10 +2329,15 @@ function renderQrSheet() {
 // SETTINGS
 // ============================================================
 function renderSettingsForm() {
-  $('#p1-start').value = STATE.settings.p1.start;
-  $('#p1-end').value = STATE.settings.p1.end;
-  $('#p2-start').value = STATE.settings.p2.start;
-  $('#p2-end').value = STATE.settings.p2.end;
+  // 구버전(p1/p2) 설정 마이그레이션
+  if (!STATE.settings.yaja) {
+    STATE.settings.yaja = {
+      start: (STATE.settings.p1 && STATE.settings.p1.start) || '19:00',
+      end:   (STATE.settings.p2 && STATE.settings.p2.end)   || '22:00'
+    };
+  }
+  $('#yaja-start').value = STATE.settings.yaja.start;
+  $('#yaja-end').value = STATE.settings.yaja.end;
   $('#school-name').value = STATE.settings.schoolName || '';
   $('#this-room').value = STATE.thisRoom || '';
   $('#rotate-sec').value = STATE.settings.rotateSec || 12;
@@ -2366,10 +2350,9 @@ function renderSettingsForm() {
 }
 
 async function saveSettings() {
-  STATE.settings.p1.start = $('#p1-start').value || '19:00';
-  STATE.settings.p1.end   = $('#p1-end').value   || '20:30';
-  STATE.settings.p2.start = $('#p2-start').value || '20:40';
-  STATE.settings.p2.end   = $('#p2-end').value   || '22:00';
+  if (!STATE.settings.yaja) STATE.settings.yaja = { start:'19:00', end:'22:00' };
+  STATE.settings.yaja.start = $('#yaja-start').value || '19:00';
+  STATE.settings.yaja.end   = $('#yaja-end').value   || '22:00';
   STATE.settings.schoolName = $('#school-name').value.trim();
   await saveSettingsData();
   toast('설정을 저장했어요', 'success');
@@ -2453,17 +2436,16 @@ async function resetAll() {
 // ============================================================
 function exportCSV() {
   if (!STATE.log.length) { toast('내보낼 기록이 없어요'); return; }
-  const rows = [['날짜', '시각', '이름', '학년', '반', '번호', '구분', '교시', '신청여부']];
+  const rows = [['날짜', '시각', '학번', '학년', '반', '번호', '구분', '신청여부']];
   const sorted = STATE.log.slice().sort((a,b) => a.ts - b.ts);
   sorted.forEach(r => {
     const s = STATE.students.find(x => x.id === r.studentId);
     const d = new Date(r.ts);
     rows.push([
       fmtDate(d), fmtTimeS(d),
-      s ? s.name : '(삭제됨)',
+      s ? studentName(s) : '(삭제됨)',
       s?.grade ?? '', s?.class ?? '', s?.num ?? '',
       r.type === 'in' ? '입실' : '퇴실',
-      r.period ?? '',
       r.unplanned ? '신청 외' : '정상'
     ]);
   });
@@ -2502,9 +2484,9 @@ function setStatRange(kind) {
   $('#stat-to').value = fmtDate(to);
 }
 
-// 한 학생의 특정 날짜·교시 상태 판정: 'ok'(정상) | 'in'(입실만) | 'absent'
-function dayPeriodStatus(studentId, dateStr, period) {
-  const evs = STATE.log.filter(r => r.studentId === studentId && r.period === period
+// 한 학생의 특정 날짜 출석 상태: 'ok'(정상=입실+퇴실) | 'in'(입실만) | 'absent'
+function dayStatus(studentId, dateStr) {
+  const evs = STATE.log.filter(r => r.studentId === studentId
                 && fmtDate(new Date(r.ts)) === dateStr).sort((a,b)=>a.ts-b.ts);
   if (!evs.length) return 'absent';
   const hasIn = evs.some(e => e.type === 'in');
@@ -2512,6 +2494,21 @@ function dayPeriodStatus(studentId, dateStr, period) {
   if (hasIn && hasOut) return 'ok';
   if (hasIn) return 'in';
   return 'absent';
+}
+
+// 한 학생의 특정 날짜 첫 입실·마지막 퇴실 시각 {inTs, outTs, status}
+function dayInOut(studentId, dateStr) {
+  const evs = STATE.log.filter(r => r.studentId === studentId
+                && fmtDate(new Date(r.ts)) === dateStr).sort((a,b)=>a.ts-b.ts);
+  const ins = evs.filter(e => e.type === 'in');
+  const outs = evs.filter(e => e.type === 'out');
+  const inTs = ins.length ? ins[0].ts : null;            // 첫 입실
+  const outTs = outs.length ? outs[outs.length-1].ts : null; // 마지막 퇴실
+  let status = 'absent';
+  if (inTs && outTs) status = 'ok';
+  else if (inTs) status = 'in';
+  const unplanned = ins.some(e => e.unplanned);
+  return { inTs, outTs, status, unplanned };
 }
 
 function eachDate(fromStr, toStr) {
@@ -2531,77 +2528,63 @@ function exportStats() {
 
   const dates = eachDate(fromStr, toStr);
   const students = STATE.students.slice().sort((a,b) =>
-    ((a.class||0)*1000 + (a.num||0)) - ((b.class||0)*1000 + (b.num||0)) || a.name.localeCompare(b.name));
+    ((a.class||0)*1000 + (a.num||0)) - ((b.class||0)*1000 + (b.num||0)));
 
-  // ---- 시트1: 요약 (학생별 1·2교시 따로) ----
-  const sumHead = ['이름','학년','반','번호',
-    '1교시 신청일','1교시 정상(○)','1교시 입실만(△)','1교시 결석(✗)','1교시 출석률(%)',
-    '2교시 신청일','2교시 정상(○)','2교시 입실만(△)','2교시 결석(✗)','2교시 출석률(%)',
-    '신청 외 출석(회)'];
+  // ---- 시트1: 요약 (학생별 하루 단위) ----
+  const sumHead = ['학년','반','번호','신청일','정상 출석(○)','입실만(△)','결석(✗)','출석률(%)','신청 외 출석(회)'];
   const sumRows = [sumHead];
 
-  // ---- 시트2: 일자별 (학생 × 날짜, 교시별 칸) ----
-  // 헤더: 이름, 학번, 그리고 각 날짜마다 "MM/DD 1", "MM/DD 2"
-  const gridHead = ['이름','학번'];
-  dates.forEach(dt => {
-    const md = dt.slice(5).replace('-', '/');
-    gridHead.push(`${md} 1교시`, `${md} 2교시`);
-  });
+  // ---- 시트2: 일자별 (학생 × 날짜) ----
+  const gridHead = ['학번'];
+  dates.forEach(dt => { gridHead.push(dt.slice(5).replace('-', '/')); });
   const gridRows = [gridHead];
 
   students.forEach(s => {
-    const stat = { 1: {applied:0, ok:0, in:0, absent:0}, 2: {applied:0, ok:0, in:0, absent:0} };
-    let unplannedCount = 0;
-    const gridRow = [s.name, studentLabel(s) || ''];
+    const stat = { applied:0, ok:0, in:0, absent:0 };
+    const gridRow = [studentLabel(s) || ''];
 
     dates.forEach(dt => {
       const dObj = new Date(dt + 'T00:00:00');
-      [1,2].forEach(p => {
-        const applied = isApplied(s, p, dObj);
-        if (!applied) { gridRow.push(''); return; } // 신청 안 한 교시는 빈칸
-        stat[p].applied++;
-        const st = dayPeriodStatus(s.id, dt, p);
-        if (st === 'ok') { stat[p].ok++; gridRow.push('○'); }
-        else if (st === 'in') { stat[p].in++; gridRow.push('△'); }
-        else { stat[p].absent++; gridRow.push('✗'); }
-      });
+      if (!isApplied(s, dObj)) { gridRow.push(''); return; } // 신청 안 한 날은 빈칸
+      stat.applied++;
+      const st = dayStatus(s.id, dt);
+      if (st === 'ok') { stat.ok++; gridRow.push('○'); }
+      else if (st === 'in') { stat.in++; gridRow.push('△'); }
+      else { stat.absent++; gridRow.push('✗'); }
     });
-    // 신청 외 출석 카운트 (기간 내)
-    unplannedCount = STATE.log.filter(r => r.studentId === s.id && r.unplanned
-      && r.type === 'in' && fmtDate(new Date(r.ts)) >= fromStr && fmtDate(new Date(r.ts)) <= toStr).length;
 
-    const rate = p => stat[p].applied ? Math.round(stat[p].ok / stat[p].applied * 100) : '';
-    sumRows.push([s.name, s.grade ?? '', s.class ?? '', s.num ?? '',
-      stat[1].applied, stat[1].ok, stat[1].in, stat[1].absent, rate(1),
-      stat[2].applied, stat[2].ok, stat[2].in, stat[2].absent, rate(2),
-      unplannedCount]);
+    const unplannedCount = STATE.log.filter(r => r.studentId === s.id && r.unplanned
+      && r.type === 'in' && fmtDate(new Date(r.ts)) >= fromStr && fmtDate(new Date(r.ts)) <= toStr).length;
+    const rate = stat.applied ? Math.round(stat.ok / stat.applied * 100) : '';
+    sumRows.push([s.grade ?? '', s.class ?? '', s.num ?? '',
+      stat.applied, stat.ok, stat.in, stat.absent, rate, unplannedCount]);
     gridRows.push(gridRow);
   });
 
   // ---- 시트3: 원본 기록 ----
-  const rawHead = ['날짜','시각','이름','학번','구분','교시','교실','신청여부'];
+  const rawHead = ['날짜','시각','학번','구분','교실','신청여부'];
   const rawRows = [rawHead];
   STATE.log.filter(r => { const d = fmtDate(new Date(r.ts)); return d >= fromStr && d <= toStr; })
     .sort((a,b)=>a.ts-b.ts).forEach(r => {
       const s = STATE.students.find(x => x.id === r.studentId);
       const d = new Date(r.ts);
-      rawRows.push([fmtDate(d), fmtTimeS(d), s?s.name:'(삭제됨)', s?studentLabel(s):'',
-        r.type==='in'?'입실':'퇴실', r.period??'', r.room??'', r.unplanned?'신청 외':'정상']);
+      rawRows.push([fmtDate(d), fmtTimeS(d), s?studentLabel(s):'(삭제됨)',
+        r.type==='in'?'입실':'퇴실', r.room??'', r.unplanned?'신청 외':'정상']);
     });
 
   // ---- 워크북 작성 ----
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.aoa_to_sheet(sumRows);
-  ws1['!cols'] = sumHead.map((h,i) => ({ wch: i===0?10 : (h.length>6?13:8) }));
+  ws1['!cols'] = sumHead.map((h,i) => ({ wch: i<3?6 : (h.length>6?13:9) }));
   XLSX.utils.book_append_sheet(wb, ws1, '요약');
 
   const ws2 = XLSX.utils.aoa_to_sheet(gridRows);
-  ws2['!cols'] = [{wch:10},{wch:10}, ...dates.flatMap(()=>[{wch:8},{wch:8}])];
-  if (gridRows.length) ws2['!freeze'] = { xSplit: 2, ySplit: 1 };
+  ws2['!cols'] = [{wch:10}, ...dates.map(()=>({wch:7}))];
+  if (gridRows.length) ws2['!freeze'] = { xSplit: 1, ySplit: 1 };
   XLSX.utils.book_append_sheet(wb, ws2, '일자별');
 
   const ws3 = XLSX.utils.aoa_to_sheet(rawRows);
-  ws3['!cols'] = [{wch:11},{wch:9},{wch:10},{wch:9},{wch:6},{wch:6},{wch:8},{wch:8}];
+  ws3['!cols'] = [{wch:11},{wch:9},{wch:10},{wch:6},{wch:8},{wch:8}];
   XLSX.utils.book_append_sheet(wb, ws3, '원본기록');
 
   XLSX.writeFile(wb, `야자출결통계_${fromStr}_${toStr}.xlsx`);
@@ -2611,6 +2594,23 @@ function exportStats() {
 // ============================================================
 // LOG VIEW
 // ============================================================
+function populateIoClasses() {
+  const sel = $('#io-class');
+  if (!sel) return;
+  const cur = sel.value;
+  const classes = [...new Set(STATE.students.map(s => s.class).filter(v => v != null))].sort((a,b)=>a-b);
+  sel.innerHTML = '<option value="">전체 반</option>' + classes.map(c => `<option value="${c}">${c}반</option>`).join('');
+  sel.value = cur;
+}
+
+function renderIoTable() {
+  const date = $('#io-date').value || todayStr();
+  const klass = $('#io-class').value;
+  let roster = STATE.students.slice();
+  if (klass) roster = roster.filter(s => String(s.class) === klass);
+  $('#io-tbody').innerHTML = inOutRows(roster, date);
+}
+
 function renderLog() {
   const date = $('#log-date').value;
   const type = $('#log-type').value;
@@ -2621,7 +2621,7 @@ function renderLog() {
   if (search) {
     list = list.filter(r => {
       const s = STATE.students.find(x => x.id === r.studentId);
-      return s && s.name.toLowerCase().includes(search);
+      return s && (studentLabel(s)||"").toLowerCase().includes(search);
     });
   }
   list.sort((a,b) => b.ts - a.ts);
@@ -2629,7 +2629,7 @@ function renderLog() {
   const tbody = $('#log-tbody');
   tbody.innerHTML = '';
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="icon">○</div>해당 조건의 기록이 없습니다.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="icon">○</div>해당 조건의 기록이 없습니다.</div></td></tr>`;
     return;
   }
   list.forEach(r => {
@@ -2638,12 +2638,10 @@ function renderLog() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="mono faint">${fmtDate(d)} ${fmtTimeS(d)}</td>
-      <td><strong>${escapeHTML(s ? s.name : '(삭제된 학생)')}</strong></td>
-      <td class="muted">${escapeHTML(s ? studentLabel(s) : '')}</td>
+      <td><strong>${escapeHTML(s ? studentName(s) : '(삭제된 학생)')}</strong></td>
       <td>${r.type === 'in'
             ? '<span class="pill pill-success"><span class="dot" style="background: currentColor;"></span>입실</span>'
-            : '<span class="pill pill-danger"><span class="dot" style="background: currentColor;"></span>퇴실</span>'}</td>
-      <td class="muted">${r.period ? r.period + '교시' : '—'}${r.unplanned ? ' <span class="pill pill-warn" style="font-size:9px; padding:1px 6px;">신청 외</span>' : ''}</td>
+            : '<span class="pill pill-danger"><span class="dot" style="background: currentColor;"></span>퇴실</span>'}${r.unplanned ? ' <span class="pill pill-warn" style="font-size:9px; padding:1px 6px;">신청 외</span>' : ''}</td>
       <td style="text-align: right;">
         <button class="btn btn-sm btn-ghost" style="color: var(--danger);" onclick="deleteLog('${r.id}')">삭제</button>
       </td>`;
@@ -2672,8 +2670,8 @@ function renderDashboard() {
   const lastByStudent = {};
   todayLog.sort((a,b) => a.ts - b.ts).forEach(r => { lastByStudent[r.studentId] = r; });
 
-  // 오늘 신청한(요일에 1교시든 2교시든 포함된) 학생 = 오늘 야자 대상자
-  const appliedToday = STATE.students.filter(s => todayApplied(s, now).length > 0);
+  // 오늘 야자 신청한 학생 = 오늘 대상자
+  const appliedToday = STATE.students.filter(s => isApplied(s, now));
   const appliedIds = new Set(appliedToday.map(s => s.id));
 
   const presentIds = Object.keys(lastByStudent).filter(id => lastByStudent[id].type === 'in');
@@ -2715,7 +2713,7 @@ function renderDashboard() {
       const flag = ev.unplanned ? ` <span class="pill pill-warn" style="font-size:9px; padding:1px 6px;">신청 외</span>` : '';
       div.innerHTML = `
         <div>
-          <div class="name">${escapeHTML(s.name)}${flag}</div>
+          <div class="name">${escapeHTML(studentName(s))}${flag}</div>
           <div class="meta">${escapeHTML(studentLabel(s))}</div>
         </div>
         <div class="time">${fmtTime(d)} 입실</div>
@@ -2738,14 +2736,12 @@ function renderDashboard() {
       .filter(Boolean)
       .sort((a,b) => ((a.class||0)*100 + (a.num||0)) - ((b.class||0)*100 + (b.num||0)))
       .forEach(s => {
-        const ps = todayApplied(s, now);
-        const tag = ps.length === 2 ? '종일' : (ps[0] === 1 ? '1교시' : '2교시');
         const div = document.createElement('div');
         div.className = 'recent-item';
         div.innerHTML = `
           <div>
-            <div class="name">${escapeHTML(s.name)}</div>
-            <div class="meta">${escapeHTML(studentLabel(s))} · ${tag} 신청</div>
+            <div class="name">${escapeHTML(studentName(s))}</div>
+            <div class="meta">${escapeHTML(studentLabel(s))}</div>
           </div>
           <div class="time">미입실</div>
         `;
@@ -2903,11 +2899,10 @@ async function verifyAndRecord(token, code) {
   const last = todayEvents[todayEvents.length - 1];
   const type = (!last || last.type === 'out') ? 'in' : 'out';
   if (last && last.type === type && now - last.ts < 10000) {
-    showFeedback('warn', '↻', student.name, studentLabel(student), `이미 ${type==='in'?'입실':'퇴실'} 처리됨`); return;
+    showFeedback('warn', '↻', studentName(student), studentLabel(student), `이미 ${type==='in'?'입실':'퇴실'} 처리됨`); return;
   }
-  const nowPeriod = getPeriod();
-  const unplanned = (type === 'in') && nowPeriod && !isApplied(student, nowPeriod);
-  const rec = { id: uid(), studentId: student.id, ts: now, type, period: nowPeriod,
+  const unplanned = (type === 'in') && !isApplied(student);
+  const rec = { id: uid(), studentId: student.id, ts: now, type,
                 room: STATE.thisRoom || undefined, unplanned: unplanned || undefined };
   // undefined 필드 제거 (Firebase는 undefined를 거부)
   Object.keys(rec).forEach(k => rec[k] === undefined && delete rec[k]);
@@ -2916,13 +2911,12 @@ async function verifyAndRecord(token, code) {
   Cloud.pushLogRecord(rec);
 
   if (unplanned) {
-    const tl = todayApplied(student);
-    showFeedback('warn', '!', student.name,
-      tl.length ? `오늘 신청: ${tl.map(p=>p+'교시').join('·')}` : '오늘은 신청 없음',
-      `${nowPeriod}교시 신청 안 함 · 입실은 기록됨`);
+    showFeedback('warn', '!', studentName(student),
+      '오늘은 야자 신청이 없어요',
+      '신청 외 · 입실은 기록됨');
   } else {
     showFeedback(type==='in'?'success':'danger', type==='in'?'✓':'↩',
-      student.name, studentLabel(student), type==='in'?'입실 완료':'퇴실 완료');
+      studentName(student), studentLabel(student), type==='in'?'입실 완료':'퇴실 완료');
   }
   renderRecent();
 }
@@ -3064,7 +3058,7 @@ function renderRecent() {
     div.className = `recent-item ${r.type}`;
     div.innerHTML = `
       <div>
-        <div class="name">${escapeHTML(s.name)}</div>
+        <div class="name">${escapeHTML(studentName(s))}</div>
         <div class="meta">${escapeHTML(studentLabel(s))} · ${r.type === 'in' ? '입실' : '퇴실'}</div>
       </div>
       <div class="time">${fmtTime(d)}</div>
@@ -3105,6 +3099,8 @@ function renderRecent() {
   $('#log-type').addEventListener('change', renderLog);
   $('#log-search').addEventListener('input', renderLog);
   $('#log-date').value = todayStr();
+  $('#io-date').addEventListener('change', renderIoTable);
+  $('#io-class').addEventListener('change', renderIoTable);
 
   // 해시 변경(폰에서 새 QR 찍음) 감지
   window.addEventListener('hashchange', () => { if (isPhoneRoute()) goPhone(); });
@@ -3117,7 +3113,7 @@ function rerenderActiveViews() {
   if (!$('#view-admin').classList.contains('hidden')) {
     if (STATE.ui.activeTab === 'dashboard') renderDashboard();
     else if (STATE.ui.activeTab === 'students') renderStudents();
-    else if (STATE.ui.activeTab === 'log') renderLog();
+    else if (STATE.ui.activeTab === 'log') { renderLog(); renderIoTable(); }
   }
   if (!$('#view-kiosk').classList.contains('hidden')) renderRecent();
   if (!$('#view-teacher').classList.contains('hidden')) renderTeacher();
