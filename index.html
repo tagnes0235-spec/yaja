@@ -953,6 +953,7 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
       <button class="tab" data-panel="students">학생 명단 <span class="tab-count" id="cnt-students">0</span></button>
       <button class="tab" data-panel="qrcards">QR 카드 인쇄</button>
       <button class="tab" data-panel="log">출결 기록 <span class="tab-count" id="cnt-log">0</span></button>
+      <button class="tab" data-panel="tempcode">임시 코드</button>
       <button class="tab" data-panel="settings">설정</button>
     </div>
 
@@ -1152,6 +1153,32 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
       </div>
     </div>
 
+    <!-- 임시 코드 -->
+    <div id="panel-tempcode" class="tab-panel hidden">
+      <div style="max-width: 560px; margin: 0 auto;">
+        <div class="card">
+          <div class="card-h">임시 코드 발급</div>
+          <div class="card-sub">QR이 안 되는 학생을 위해 1분짜리 임시 코드를 발급해요. 학생이 교실 단말의 "임시 코드 입력"에 넣으면 출석됩니다. 본인이 맞는지 확인하고 발급해주세요.</div>
+          <div class="field" style="margin-bottom:12px;">
+            <label>학생 검색 (학번)</label>
+            <input class="input" id="temp-search" placeholder="예: 7-15  또는  15" autocomplete="off">
+          </div>
+          <div id="temp-results" style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto;"></div>
+        </div>
+        <div class="card hidden" id="temp-issued" style="margin-top:16px; text-align:center;">
+          <div class="card-sub" id="temp-issued-for" style="margin-bottom:8px;"></div>
+          <div id="temp-code-display" style="font-family:'JetBrains Mono',monospace; font-size:56px; font-weight:700; letter-spacing:0.2em; color:var(--accent); line-height:1;"></div>
+          <div id="temp-countdown" style="margin-top:12px; font-size:14px; color:var(--text-dim);"></div>
+          <div style="margin-top:8px;">
+            <div style="height:6px; background:var(--bg-elev-2); border-radius:999px; overflow:hidden; max-width:280px; margin:0 auto;">
+              <div id="temp-progress" style="height:100%; width:100%; background:var(--accent); transition:width 1s linear;"></div>
+            </div>
+          </div>
+          <p class="muted" style="font-size:12px; margin:14px 0 0;">이 코드를 학생에게 알려주세요. 학생이 교실 단말에 입력하면 출석됩니다. 한 번 쓰면 즉시 만료돼요.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings -->
     <div id="panel-settings" class="tab-panel hidden">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -1334,6 +1361,14 @@ table.tbl tr:hover td { background: var(--bg-elev-2); }
             카메라를 사용할 수 없어요.
           </div>
         </div>
+        <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-soft);">
+          <p class="muted text-c" style="font-size:12px; margin:0 0 8px;">QR이 안 되나요? 선생님께 받은 임시 코드를 입력하세요</p>
+          <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+            <input class="input" id="temp-input" inputmode="numeric" maxlength="4" placeholder="0000"
+              style="width:120px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:22px; letter-spacing:0.25em;">
+            <button class="btn btn-primary" onclick="submitTempCode()">출석</button>
+          </div>
+        </div>
       </div>
       <!-- 오른쪽: 현황 -->
       <div class="recent">
@@ -1447,6 +1482,7 @@ const STATE = {
   challengeTimer: null,
   usedNonces: {},        // {nonce: expireTs} — 재사용 방지
   thisRoom: '',          // 이 단말의 교실 식별자
+  tempCodes: {},         // {code: {studentId, expires}} — 임시코드 미러(단말용)
   phone: { code: null, qr: null, timer: null, challenge: null },
 };
 
@@ -1676,7 +1712,25 @@ const Cloud = (() => {
     });
   }
 
-  return { init, isReady, pushStudents, pushLogRecord, removeLogRecord, subscribe, FIREBASE_CONFIG };
+  // ===== 임시 코드 (QR 안 되는 학생용) =====
+  // tempcodes/{4자리코드} = { studentId, expires }
+  function issueTempCode(studentId, code, expires) {
+    if (!ready) return Promise.reject(new Error('cloud-not-ready'));
+    return db.ref('tempcodes/' + code).set({ studentId, expires });
+  }
+  // 단말이 임시코드 노드를 실시간 구독 (만료 청소 + 로컬 미러)
+  function subscribeTempCodes(cb) {
+    if (!ready) return;
+    db.ref('tempcodes').on('value', snap => { cb(snap.val() || {}); });
+  }
+  // 코드 사용 시 삭제(한 번 쓰면 만료)
+  function consumeTempCode(code) {
+    if (!ready) return;
+    try { db.ref('tempcodes/' + code).remove(); } catch {}
+  }
+
+  return { init, isReady, pushStudents, pushLogRecord, removeLogRecord, subscribe,
+           issueTempCode, subscribeTempCodes, consumeTempCode, FIREBASE_CONFIG };
 })();
 
 // ============================================================
@@ -1921,7 +1975,7 @@ function inOutRows(students, dateStr) {
 function switchTab(panel) {
   STATE.ui.activeTab = panel;
   $$('#admin-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.panel === panel));
-  ['dashboard', 'students', 'qrcards', 'log', 'settings'].forEach(p => {
+  ['dashboard', 'students', 'qrcards', 'log', 'tempcode', 'settings'].forEach(p => {
     $(`#panel-${p}`).classList.toggle('hidden', p !== panel);
   });
   if (panel === 'dashboard') renderDashboard();
@@ -1934,6 +1988,7 @@ function switchTab(panel) {
     populateIoClasses();
     renderIoTable();
   }
+  if (panel === 'tempcode') renderTempSearch();
   if (panel === 'settings') renderSettingsForm();
 }
 
@@ -2892,8 +2947,12 @@ async function verifyAndRecord(token, code) {
   if (!student) { showFeedback('warn', '?', '등록되지 않은 학생', code, '관리자에게 문의'); return; }
 
   STATE.usedNonces[nonce] = now;
+  await recordAttendance(student);
+}
 
-  // 입실/퇴실 자동 판정
+// 입·퇴실 기록 (QR 응답·임시코드 공용)
+async function recordAttendance(student) {
+  const now = Date.now();
   const today = todayStr();
   const todayEvents = STATE.log.filter(r => r.studentId === student.id && fmtDate(new Date(r.ts)) === today).sort((a,b)=>a.ts-b.ts);
   const last = todayEvents[todayEvents.length - 1];
@@ -2904,7 +2963,6 @@ async function verifyAndRecord(token, code) {
   const unplanned = (type === 'in') && !isApplied(student);
   const rec = { id: uid(), studentId: student.id, ts: now, type,
                 room: STATE.thisRoom || undefined, unplanned: unplanned || undefined };
-  // undefined 필드 제거 (Firebase는 undefined를 거부)
   Object.keys(rec).forEach(k => rec[k] === undefined && delete rec[k]);
   STATE.log.push(rec);
   await saveLog();
@@ -2919,6 +2977,105 @@ async function verifyAndRecord(token, code) {
       studentName(student), studentLabel(student), type==='in'?'입실 완료':'퇴실 완료');
   }
   renderRecent();
+}
+
+// 단말에서 임시 코드 입력 처리
+async function submitTempCode() {
+  const input = $('#temp-input');
+  const code = (input.value || '').trim();
+  if (!/^\d{4}$/.test(code)) { showFeedback('warn', '⚠', '코드 확인', '', '4자리 숫자를 입력하세요'); return; }
+  const entry = STATE.tempCodes[code];
+  if (!entry) { showFeedback('danger', '✕', '잘못된 코드', code, '선생님께 다시 받아주세요'); input.value=''; return; }
+  if (Date.now() > entry.expires) {
+    showFeedback('danger', '⏱', '만료된 코드', code, '선생님께 다시 받아주세요');
+    Cloud.consumeTempCode(code); input.value=''; return;
+  }
+  const student = STATE.students.find(s => s.id === entry.studentId);
+  if (!student) { showFeedback('warn', '?', '학생을 찾을 수 없어요', '', '관리자에게 문의'); input.value=''; return; }
+  Cloud.consumeTempCode(code);
+  if (STATE.tempCodes[code]) delete STATE.tempCodes[code];
+  input.value = '';
+  await recordAttendance(student);
+}
+
+// ===== 관리자: 임시 코드 발급 =====
+const TEMP_TTL_MS = 60000; // 1분
+let _tempCountdownTimer = null;
+
+function renderTempSearch() {
+  $('#temp-search').value = '';
+  $('#temp-issued').classList.add('hidden');
+  if (_tempCountdownTimer) { clearInterval(_tempCountdownTimer); _tempCountdownTimer = null; }
+  renderTempResults('');
+  setTimeout(() => $('#temp-search')?.focus(), 80);
+}
+
+function renderTempResults(q) {
+  const box = $('#temp-results');
+  const query = (q || '').trim().toLowerCase();
+  let list = STATE.students.slice().sort((a,b) =>
+    ((a.class||0)*1000+(a.num||0)) - ((b.class||0)*1000+(b.num||0)));
+  if (query) {
+    list = list.filter(s => (studentLabel(s)||'').toLowerCase().includes(query) || String(s.num||'').includes(query));
+  }
+  list = list.slice(0, 30);
+  if (!list.length) {
+    box.innerHTML = `<div class="empty" style="padding:24px;"><div class="icon">○</div>학생을 찾을 수 없어요</div>`;
+    return;
+  }
+  box.innerHTML = list.map(s => `
+    <div class="recent-item" style="cursor:pointer;" onclick="issueTempFor('${s.id}')">
+      <div><div class="name">${escapeHTML(studentName(s))}</div></div>
+      <div class="time" style="color:var(--accent);">코드 발급 →</div>
+    </div>`).join('');
+}
+
+async function issueTempFor(studentId) {
+  const student = STATE.students.find(s => s.id === studentId);
+  if (!student) return;
+  if (!Cloud.isReady()) {
+    toast('클라우드 연결이 필요해요 (실제 사이트에서 사용)', 'danger');
+    return;
+  }
+  // 4자리 코드 생성 (현재 살아있는 코드와 중복 회피)
+  let code;
+  let tries = 0;
+  do { code = String(Math.floor(1000 + Math.random()*9000)); tries++; }
+  while (STATE.tempCodes[code] && tries < 20);
+  const expires = Date.now() + TEMP_TTL_MS;
+  try {
+    await Cloud.issueTempCode(student.id, code, expires);
+  } catch (e) {
+    toast('발급 실패 — 다시 시도해주세요', 'danger');
+    return;
+  }
+  showIssuedCode(student, code, expires);
+}
+
+function showIssuedCode(student, code, expires) {
+  $('#temp-issued').classList.remove('hidden');
+  $('#temp-issued-for').textContent = `${studentName(student)} 학생의 임시 코드`;
+  $('#temp-code-display').textContent = code;
+  if (_tempCountdownTimer) clearInterval(_tempCountdownTimer);
+  const tick = () => {
+    const left = Math.ceil((expires - Date.now())/1000);
+    const cd = $('#temp-countdown'), pg = $('#temp-progress');
+    if (!cd) return;
+    if (left > 0) {
+      cd.textContent = `${left}초 후 만료`;
+      cd.style.color = left <= 15 ? 'var(--danger)' : 'var(--text-dim)';
+      if (pg) pg.style.width = (left / (TEMP_TTL_MS/1000) * 100) + '%';
+    } else {
+      cd.textContent = '만료됨 — 다시 발급해주세요';
+      cd.style.color = 'var(--danger)';
+      if (pg) pg.style.width = '0%';
+      $('#temp-code-display').style.opacity = '0.35';
+      clearInterval(_tempCountdownTimer); _tempCountdownTimer = null;
+    }
+  };
+  $('#temp-code-display').style.opacity = '1';
+  tick();
+  _tempCountdownTimer = setInterval(tick, 1000);
 }
 
 // ============================================================
@@ -3081,6 +3238,7 @@ function renderRecent() {
       students: () => { refreshCounts(); rerenderActiveViews(); },
       log:      () => { refreshCounts(); rerenderActiveViews(); },
     });
+    Cloud.subscribeTempCodes(map => { STATE.tempCodes = map || {}; });
   }
 
   // 학생이 화면 QR을 찍어 들어온 경우 → 폰 체크인 화면
@@ -3101,6 +3259,8 @@ function renderRecent() {
   $('#log-date').value = todayStr();
   $('#io-date').addEventListener('change', renderIoTable);
   $('#io-class').addEventListener('change', renderIoTable);
+  $('#temp-search').addEventListener('input', e => renderTempResults(e.target.value));
+  $('#temp-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitTempCode(); });
 
   // 해시 변경(폰에서 새 QR 찍음) 감지
   window.addEventListener('hashchange', () => { if (isPhoneRoute()) goPhone(); });
